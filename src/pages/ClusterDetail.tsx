@@ -49,8 +49,8 @@ export default function ClusterDetail() {
 
   const tabs = [
     { key: 'overview', label: 'Overview' },
-    { key: 'nodes', label: `Nodes (${snapshot?.summary?.total_nodes || 0})` },
-    { key: 'pods', label: `Pods (${snapshot?.summary?.total_pods || 0})` },
+    { key: 'nodes', label: `Nodes (${snapshot?.summary?.node_count || 0})` },
+    { key: 'pods', label: `Pods (${snapshot?.summary?.pod_count || 0})` },
     { key: 'security', label: 'Security' },
   ] as const;
 
@@ -153,34 +153,43 @@ export default function ClusterDetail() {
 function OverviewTab({ snapshot, security }: { snapshot: Snapshot; security: SecurityReport | null }) {
   const s = snapshot.summary;
 
+  const cpuUtil = s.cpu_utilization_percent ?? 0;
+  const memUtil = s.mem_utilization_percent ?? 0;
+
   const cpuData = [
-    { name: 'Used', value: s.cpu_utilization },
-    { name: 'Free', value: 100 - s.cpu_utilization },
+    { name: 'Used', value: cpuUtil },
+    { name: 'Free', value: 100 - cpuUtil },
   ];
   const memData = [
-    { name: 'Used', value: s.mem_utilization },
-    { name: 'Free', value: 100 - s.mem_utilization },
+    { name: 'Used', value: memUtil },
+    { name: 'Free', value: 100 - memUtil },
   ];
+
+  const formatCpu = (millis: number) => millis >= 1000 ? `${(millis / 1000).toFixed(1)} cores` : `${millis}m`;
+  const formatMem = (bytes: number) => {
+    if (bytes >= 1073741824) return `${(bytes / 1073741824).toFixed(1)} Gi`;
+    return `${Math.round(bytes / 1048576)} Mi`;
+  };
 
   return (
     <div className="space-y-6">
       {/* Stats row */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <StatCard icon={<Server className="w-5 h-5 text-cyan-400" />} label="Nodes" value={`${s.ready_nodes}/${s.total_nodes}`} sub="ready" />
-        <StatCard icon={<Activity className="w-5 h-5 text-emerald-400" />} label="Pods" value={`${s.running_pods}/${s.total_pods}`} sub="running" />
-        <StatCard icon={<Cpu className="w-5 h-5 text-purple-400" />} label="CPU Usage" value={`${s.cpu_utilization}%`} sub={`${s.total_cpu_usage} / ${s.total_cpu_capacity}`} />
-        <StatCard icon={<HardDrive className="w-5 h-5 text-orange-400" />} label="Memory Usage" value={`${s.mem_utilization}%`} sub={`${s.total_mem_usage} / ${s.total_mem_capacity}`} />
+        <StatCard icon={<Server className="w-5 h-5 text-cyan-400" />} label="Nodes" value={s.node_count} sub="total" />
+        <StatCard icon={<Activity className="w-5 h-5 text-emerald-400" />} label="Pods" value={s.pod_count} sub="total" />
+        <StatCard icon={<Cpu className="w-5 h-5 text-purple-400" />} label="CPU Usage" value={`${cpuUtil}%`} sub={`${formatCpu(s.total_cpu_usage_millis)} / ${formatCpu(s.total_cpu_request_millis)}`} />
+        <StatCard icon={<HardDrive className="w-5 h-5 text-orange-400" />} label="Memory Usage" value={`${memUtil}%`} sub={`${formatMem(s.total_mem_usage_bytes)} / ${formatMem(s.total_mem_request_bytes)}`} />
       </div>
 
       {/* Charts row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div className="bg-surface-800 border border-white/5 rounded-xl p-5">
           <h3 className="text-sm font-medium text-gray-400 mb-4">CPU Utilization</h3>
-          <UtilizationChart data={cpuData} value={s.cpu_utilization} color="#a855f7" />
+          <UtilizationChart data={cpuData} value={cpuUtil} color="#a855f7" />
         </div>
         <div className="bg-surface-800 border border-white/5 rounded-xl p-5">
           <h3 className="text-sm font-medium text-gray-400 mb-4">Memory Utilization</h3>
-          <UtilizationChart data={memData} value={s.mem_utilization} color="#f97316" />
+          <UtilizationChart data={memData} value={memUtil} color="#f97316" />
         </div>
         <div className="bg-surface-800 border border-white/5 rounded-xl p-5">
           <h3 className="text-sm font-medium text-gray-400 mb-4">Security Score</h3>
@@ -199,20 +208,26 @@ function OverviewTab({ snapshot, security }: { snapshot: Snapshot; security: Sec
         </div>
       </div>
 
-      {/* Warnings */}
-      {s.warnings && s.warnings.length > 0 && (
+      {/* Security warnings */}
+      {(s.run_as_root_pods > 0 || s.latest_tag_pods > 0) && (
         <div className="bg-surface-800 border border-white/5 rounded-xl p-5">
           <h3 className="text-sm font-medium text-gray-400 mb-4 flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 text-yellow-400" />
-            Warnings ({s.warnings.length})
+            Warnings
           </h3>
           <div className="space-y-2">
-            {s.warnings.map((w, i) => (
-              <div key={i} className="flex items-start gap-3 text-sm text-yellow-300 bg-yellow-400/5 rounded-lg px-4 py-3">
+            {s.run_as_root_pods > 0 && (
+              <div className="flex items-start gap-3 text-sm text-yellow-300 bg-yellow-400/5 rounded-lg px-4 py-3">
                 <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                {w}
+                {s.run_as_root_pods} pod(s) running as root
               </div>
-            ))}
+            )}
+            {s.latest_tag_pods > 0 && (
+              <div className="flex items-start gap-3 text-sm text-yellow-300 bg-yellow-400/5 rounded-lg px-4 py-3">
+                <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                {s.latest_tag_pods} pod(s) using :latest tag
+              </div>
+            )}
           </div>
         </div>
       )}

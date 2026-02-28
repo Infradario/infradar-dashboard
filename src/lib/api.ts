@@ -165,17 +165,17 @@ export interface PodInfo {
 }
 
 export interface SnapshotSummary {
-  total_nodes: number;
-  ready_nodes: number;
-  total_pods: number;
-  running_pods: number;
-  total_cpu_capacity: string;
-  total_mem_capacity: string;
-  total_cpu_usage: string;
-  total_mem_usage: string;
-  cpu_utilization: number;
-  mem_utilization: number;
-  warnings: string[];
+  node_count: number;
+  pod_count: number;
+  total_cpu_request_millis: number;
+  total_cpu_usage_millis: number;
+  total_mem_request_bytes: number;
+  total_mem_usage_bytes: number;
+  cpu_utilization_percent: number;
+  mem_utilization_percent: number;
+  over_provisioned_pods: number;
+  run_as_root_pods: number;
+  latest_tag_pods: number;
 }
 
 export interface SecurityReport {

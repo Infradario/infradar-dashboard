@@ -1,9 +1,10 @@
-import { Outlet, Navigate } from 'react-router-dom';
+import { Outlet, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import Sidebar from './Sidebar';
 
 export default function Layout() {
   const { user, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -19,7 +20,7 @@ export default function Layout() {
     <div className="min-h-screen">
       <Sidebar />
       <main className="ml-64 p-8">
-        <Outlet />
+        <Outlet key={location.pathname} />
       </main>
     </div>
   );
