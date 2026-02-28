@@ -8,7 +8,7 @@ import Dashboard from './pages/Dashboard';
 import Clusters from './pages/Clusters';
 import NewCluster from './pages/NewCluster';
 import ClusterDetail from './pages/ClusterDetail';
-import Security from './pages/Security';
+import Security, { SecurityDetail } from './pages/Security';
 import AttackPaths from './pages/AttackPaths';
 import Simulator from './pages/Simulator';
 import Costs from './pages/Costs';
@@ -46,6 +46,7 @@ export default function App() {
             <Route path="/clusters/:id/ns-compare" element={<NSCompare />} />
             <Route path="/clusters/:id/golden-signals" element={<GoldenSignals />} />
             <Route path="/security" element={<Security />} />
+            <Route path="/security/:id" element={<SecurityDetail />} />
           </Route>
         </Routes>
       </AuthProvider>
