@@ -119,22 +119,23 @@ export default function AttackPaths() {
 function AttackPathDetail({ path, nodeTypeColor }: { path: AttackPath; nodeTypeColor: (t: string) => string }) {
   return (
     <div className="px-6 pb-6">
-      {/* Kill Chain Visualization */}
-      <div className="flex items-start gap-0 overflow-x-auto pb-4">
+      {/* Kill Chain - vertical on mobile, horizontal on desktop */}
+      <div className="grid grid-cols-1 md:grid-cols-none md:flex md:items-stretch gap-3 md:gap-0 overflow-x-auto pb-4">
         {path.nodes.map((node, i) => (
-          <div key={node.id} className="flex items-start flex-shrink-0">
-            <div className={`border-2 rounded-xl p-4 w-48 ${nodeTypeColor(node.type)}`}>
-              <div className="text-xs text-gray-400 uppercase tracking-wider mb-1">{node.type}</div>
-              <div className="text-sm font-semibold mb-1">{node.label}</div>
-              <div className="text-xs text-gray-400 leading-relaxed">{node.detail}</div>
+          <div key={node.id} className="flex flex-col md:flex-row items-center md:items-stretch flex-shrink-0">
+            <div className={`border-2 rounded-xl p-4 w-full md:w-52 min-h-[100px] ${nodeTypeColor(node.type)}`}>
+              <div className="text-[10px] text-gray-400 uppercase tracking-wider mb-1 font-semibold">{node.type}</div>
+              <div className="text-sm font-semibold mb-2 break-words">{node.label}</div>
+              <div className="text-xs text-gray-400 leading-relaxed break-words">{node.detail}</div>
             </div>
             {i < path.nodes.length - 1 && (
-              <div className="flex flex-col items-center justify-center mx-2 mt-6 flex-shrink-0">
-                <div className="text-xs text-gray-500 mb-1">{path.edges[i]?.technique}</div>
-                <div className="w-12 h-0.5 bg-gray-600 relative">
-                  <div className="absolute right-0 top-1/2 -translate-y-1/2 w-0 h-0 border-t-4 border-t-transparent border-b-4 border-b-transparent border-l-6 border-l-gray-600" />
-                </div>
-                <div className="text-xs text-gray-600 mt-1 max-w-[80px] text-center">{path.edges[i]?.label}</div>
+              <div className="flex md:flex-col items-center justify-center my-1 md:my-0 md:mx-2 flex-shrink-0">
+                <div className="text-[10px] text-gray-500 font-mono">{path.edges[i]?.technique}</div>
+                {/* Horizontal arrow (desktop) */}
+                <div className="hidden md:block w-8 h-0.5 bg-gray-600 my-1" />
+                {/* Vertical arrow (mobile) */}
+                <div className="md:hidden h-4 w-0.5 bg-gray-600 mx-2" />
+                <div className="text-[10px] text-gray-600 text-center max-w-[70px]">{path.edges[i]?.label}</div>
               </div>
             )}
           </div>
@@ -146,7 +147,7 @@ function AttackPathDetail({ path, nodeTypeColor }: { path: AttackPath; nodeTypeC
         <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">MITRE ATT&CK Techniques</div>
         <div className="flex flex-wrap gap-2">
           {path.edges.map((edge, i) => (
-            <span key={i} className="text-xs font-mono px-2 py-1 rounded bg-purple-500/10 text-purple-400">
+            <span key={i} className="text-xs font-mono px-2 py-1 rounded bg-purple-500/10 text-purple-400 break-words">
               {edge.technique} - {edge.description}
             </span>
           ))}

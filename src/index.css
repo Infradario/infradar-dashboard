@@ -24,8 +24,109 @@
   --color-surface-900: #0d0f1a;
 }
 
+/* Dark mode (default) */
+html.dark body {
+  background-color: var(--color-navy-950);
+  color: #ffffff;
+}
+
+/* Light mode */
+html.light body {
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+html.light .bg-surface-900 {
+  background-color: #ffffff;
+}
+
+html.light .bg-surface-800 {
+  background-color: #f1f5f9;
+}
+
+html.light .bg-surface-700 {
+  background-color: #e2e8f0;
+}
+
+html.light .bg-navy-950 {
+  background-color: #f8fafc;
+}
+
+html.light .border-white\/5,
+html.light .border-white\/10 {
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+html.light .text-white {
+  color: #0f172a;
+}
+
+html.light .text-gray-400 {
+  color: #64748b;
+}
+
+html.light .text-gray-500 {
+  color: #94a3b8;
+}
+
+html.light .text-gray-600 {
+  color: #475569;
+}
+
+html.light .text-gray-300 {
+  color: #334155;
+}
+
+html.light .hover\:text-white:hover {
+  color: #0f172a;
+}
+
+html.light .hover\:bg-white\/5:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+html.light .hover\:bg-white\/\[0\.02\]:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+html.light .bg-white\/\[0\.02\] {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+html.light .divide-white\/5 > :not(:last-child) {
+  border-color: rgba(0, 0, 0, 0.06);
+}
+
+/* Light mode inputs */
+html.light input,
+html.light select {
+  background-color: #ffffff !important;
+  border-color: rgba(0, 0, 0, 0.12) !important;
+  color: #0f172a !important;
+}
+
+html.light input::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Light mode recharts tooltip */
+html.light .recharts-default-tooltip {
+  background-color: #ffffff !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+  color: #0f172a !important;
+}
+
+/* Light mode scrollbar */
+html.light ::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.15);
+}
+
+html.light ::-webkit-scrollbar-track {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
 body {
-  @apply bg-navy-950 text-white antialiased;
+  @apply antialiased;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   margin: 0;
 }
