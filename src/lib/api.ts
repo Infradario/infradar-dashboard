@@ -89,6 +89,27 @@ export const api = {
 
   getTimeline: (clusterId: string) =>
     request<TimelinePoint[]>(`/api/v1/clusters/${clusterId}/timeline`),
+
+  // Dashboard features
+  getTopology: (clusterId: string) =>
+    request<ClusterTopology>(`/api/v1/clusters/${clusterId}/topology`),
+
+  getHeatmap: (clusterId: string) =>
+    request<HeatmapData>(`/api/v1/clusters/${clusterId}/heatmap`),
+
+  getEvents: (clusterId: string) =>
+    request<EventStream>(`/api/v1/clusters/${clusterId}/events`),
+
+  getAlerts: (clusterId: string) =>
+    request<AlertsResponse>(`/api/v1/clusters/${clusterId}/alerts`),
+
+  getNSCompare: (clusterId: string, ns1?: string, ns2?: string) => {
+    const params = ns1 && ns2 ? `?ns1=${ns1}&ns2=${ns2}` : '';
+    return request<NSCompareResponse | { namespaces: string[] }>(`/api/v1/clusters/${clusterId}/ns-compare${params}`);
+  },
+
+  getGoldenSignals: (clusterId: string) =>
+    request<GoldenSignals>(`/api/v1/clusters/${clusterId}/golden-signals`),
 };
 
 // Types
@@ -373,4 +394,165 @@ export interface TimelinePoint {
   mem_utilization: number;
   run_as_root_pods: number;
   latest_tag_pods: number;
+}
+
+// Topology types
+export interface TopologyNode {
+  id: string;
+  label: string;
+  type: string;
+  namespace?: string;
+  status: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface TopologyEdge {
+  source: string;
+  target: string;
+  type: string;
+}
+
+export interface ClusterTopology {
+  nodes: TopologyNode[];
+  edges: TopologyEdge[];
+  stats: {
+    total_nodes: number;
+    total_pods: number;
+    total_namespaces: number;
+    healthy_pods: number;
+    warning_pods: number;
+    critical_pods: number;
+  };
+}
+
+// Heatmap types
+export interface HeatmapCell {
+  namespace: string;
+  metric: string;
+  value: number;
+  max: number;
+  intensity: number;
+}
+
+export interface NodeHeatmapRow {
+  node_name: string;
+  cpu_percent: number;
+  mem_percent: number;
+  pod_percent: number;
+  pod_count: number;
+  max_pods: number;
+  cpu_requested: number;
+  cpu_capacity: number;
+  mem_requested: number;
+  mem_capacity: number;
+}
+
+export interface HeatmapData {
+  namespaces: string[];
+  metrics: string[];
+  cells: HeatmapCell[];
+  node_map: NodeHeatmapRow[];
+}
+
+// Event types
+export interface PodEvent {
+  type: string;
+  pod: string;
+  namespace: string;
+  message: string;
+  severity: string;
+  time: string;
+}
+
+export interface EventStream {
+  events: PodEvent[];
+  summary: {
+    total_events: number;
+    additions: number;
+    removals: number;
+    restarts: number;
+    warnings: number;
+  };
+}
+
+// Alert types
+export interface SmartAlert {
+  id: string;
+  type: string;
+  severity: string;
+  title: string;
+  description: string;
+  resource: string;
+  metric?: string;
+  suggestion: string;
+}
+
+export interface AlertsResponse {
+  alerts: SmartAlert[];
+  critical: number;
+  warning: number;
+  info: number;
+}
+
+// Namespace Compare types
+export interface NamespaceProfile {
+  namespace: string;
+  pod_count: number;
+  running_pods: number;
+  total_cpu_request: number;
+  total_mem_request: number;
+  total_cpu_usage: number;
+  total_mem_usage: number;
+  root_pods: number;
+  privileged_pods: number;
+  no_probes_pods: number;
+  total_restarts: number;
+  latest_tag_pods: number;
+  images: string[];
+}
+
+export interface NSCompareResponse {
+  ns1: NamespaceProfile;
+  ns2: NamespaceProfile;
+}
+
+// Golden Signals types
+export interface GoldenSignals {
+  saturation: {
+    cpu_request_percent: number;
+    mem_request_percent: number;
+    pod_capacity_used: number;
+    status: string;
+    message: string;
+  };
+  errors: {
+    crashing_pods: number;
+    restarting_pods: number;
+    not_ready_pods: number;
+    total_restarts: number;
+    status: string;
+    top_restarters: string[];
+  };
+  traffic: {
+    total_pods: number;
+    running_pods: number;
+    pending_pods: number;
+    availability_percent: number;
+    status: string;
+  };
+  utilization: {
+    cpu_usage_percent: number;
+    mem_usage_percent: number;
+    cpu_efficiency: number;
+    mem_efficiency: number;
+    status: string;
+  };
+  by_namespace: {
+    namespace: string;
+    pods: number;
+    restarts: number;
+    cpu_request: number;
+    mem_request: number;
+    health: string;
+  }[];
 }

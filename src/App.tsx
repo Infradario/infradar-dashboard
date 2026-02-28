@@ -14,6 +14,12 @@ import Simulator from './pages/Simulator';
 import Costs from './pages/Costs';
 import BlastRadius from './pages/BlastRadius';
 import Timeline from './pages/Timeline';
+import ClusterMap from './pages/ClusterMap';
+import Heatmap from './pages/Heatmap';
+import Events from './pages/Events';
+import Alerts from './pages/Alerts';
+import NSCompare from './pages/NSCompare';
+import GoldenSignals from './pages/GoldenSignals';
 
 export default function App() {
   return (
@@ -33,6 +39,12 @@ export default function App() {
             <Route path="/clusters/:id/costs" element={<Costs />} />
             <Route path="/clusters/:id/blast-radius" element={<BlastRadius />} />
             <Route path="/clusters/:id/timeline" element={<Timeline />} />
+            <Route path="/clusters/:id/topology" element={<ClusterMap />} />
+            <Route path="/clusters/:id/heatmap" element={<Heatmap />} />
+            <Route path="/clusters/:id/events" element={<Events />} />
+            <Route path="/clusters/:id/alerts" element={<Alerts />} />
+            <Route path="/clusters/:id/ns-compare" element={<NSCompare />} />
+            <Route path="/clusters/:id/golden-signals" element={<GoldenSignals />} />
             <Route path="/security" element={<Security />} />
           </Route>
         </Routes>

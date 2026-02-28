@@ -4,6 +4,7 @@ import {
   ArrowLeft, Server, Cpu, HardDrive, Activity, Shield,
   AlertTriangle, CheckCircle, XCircle, ChevronDown, ChevronUp,
   Target, Play, DollarSign, Crosshair, Clock,
+  Network, Flame, Radio, Bell, GitCompare, Gauge,
 } from 'lucide-react';
 import {
   PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip,
@@ -90,6 +91,7 @@ export default function ClusterDetail() {
 
       {/* Innovative Features */}
       {snapshot && (
+        <>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
           {[
             { to: `/clusters/${id}/attack-paths`, icon: Target, label: 'Attack Paths', color: 'text-red-400', bg: 'hover:bg-red-500/10' },
@@ -108,6 +110,26 @@ export default function ClusterDetail() {
             </Link>
           ))}
         </div>
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-6">
+          {[
+            { to: `/clusters/${id}/topology`, icon: Network, label: 'Cluster Map', color: 'text-sky-400', bg: 'hover:bg-sky-500/10' },
+            { to: `/clusters/${id}/heatmap`, icon: Flame, label: 'Heatmap', color: 'text-amber-400', bg: 'hover:bg-amber-500/10' },
+            { to: `/clusters/${id}/events`, icon: Radio, label: 'Events', color: 'text-indigo-400', bg: 'hover:bg-indigo-500/10' },
+            { to: `/clusters/${id}/alerts`, icon: Bell, label: 'Alerts', color: 'text-rose-400', bg: 'hover:bg-rose-500/10' },
+            { to: `/clusters/${id}/ns-compare`, icon: GitCompare, label: 'NS Compare', color: 'text-violet-400', bg: 'hover:bg-violet-500/10' },
+            { to: `/clusters/${id}/golden-signals`, icon: Gauge, label: 'Golden Signals', color: 'text-teal-400', bg: 'hover:bg-teal-500/10' },
+          ].map(({ to, icon: Icon, label, color, bg }) => (
+            <Link
+              key={to}
+              to={to}
+              className={`flex items-center gap-2 p-3 rounded-xl bg-surface-800 border border-white/5 ${bg} transition-colors`}
+            >
+              <Icon className={`w-5 h-5 ${color}`} />
+              <span className="text-sm font-medium">{label}</span>
+            </Link>
+          ))}
+        </div>
+        </>
       )}
 
       {!snapshot && tab !== 'security' ? (
