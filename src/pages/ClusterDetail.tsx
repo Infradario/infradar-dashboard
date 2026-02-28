@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   ArrowLeft, Server, Cpu, HardDrive, Activity, Shield,
   AlertTriangle, CheckCircle, XCircle, ChevronDown, ChevronUp,
+  Target, Play, DollarSign, Crosshair, Clock,
 } from 'lucide-react';
 import {
   PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip,
@@ -86,6 +87,28 @@ export default function ClusterDetail() {
           </button>
         ))}
       </div>
+
+      {/* Innovative Features */}
+      {snapshot && (
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+          {[
+            { to: `/clusters/${id}/attack-paths`, icon: Target, label: 'Attack Paths', color: 'text-red-400', bg: 'hover:bg-red-500/10' },
+            { to: `/clusters/${id}/simulator`, icon: Play, label: 'What-If Simulator', color: 'text-purple-400', bg: 'hover:bg-purple-500/10' },
+            { to: `/clusters/${id}/costs`, icon: DollarSign, label: 'Cost Analysis', color: 'text-emerald-400', bg: 'hover:bg-emerald-500/10' },
+            { to: `/clusters/${id}/blast-radius`, icon: Crosshair, label: 'Blast Radius', color: 'text-orange-400', bg: 'hover:bg-orange-500/10' },
+            { to: `/clusters/${id}/timeline`, icon: Clock, label: 'Timeline', color: 'text-cyan-400', bg: 'hover:bg-cyan-500/10' },
+          ].map(({ to, icon: Icon, label, color, bg }) => (
+            <Link
+              key={to}
+              to={to}
+              className={`flex items-center gap-2 p-3 rounded-xl bg-surface-800 border border-white/5 ${bg} transition-colors`}
+            >
+              <Icon className={`w-5 h-5 ${color}`} />
+              <span className="text-sm font-medium">{label}</span>
+            </Link>
+          ))}
+        </div>
+      )}
 
       {!snapshot && tab !== 'security' ? (
         <div className="bg-surface-800 border border-white/5 rounded-xl p-12 text-center">
