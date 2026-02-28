@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
   Shield, Server, ArrowLeft, AlertTriangle, CheckCircle, XCircle,
-  ChevronDown, ChevronUp,
+  ChevronDown, ChevronUp, Target, Crosshair, GitCompare,
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { api } from '../lib/api';
@@ -207,6 +207,24 @@ export function SecurityDetail() {
         <Shield className="w-6 h-6 text-cyan-400" />
         <h1 className="text-2xl font-bold">{cluster.name}</h1>
         <span className="text-sm text-gray-500">{cluster.provider.toUpperCase()}</span>
+      </div>
+
+      {/* Security Tools */}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
+        {[
+          { to: `/security/${id}/attack-paths`, icon: Target, label: 'Attack Paths', color: 'text-red-400', bg: 'hover:bg-red-500/10' },
+          { to: `/security/${id}/blast-radius`, icon: Crosshair, label: 'Blast Radius', color: 'text-orange-400', bg: 'hover:bg-orange-500/10' },
+          { to: `/security/${id}/ns-compare`, icon: GitCompare, label: 'NS Compare', color: 'text-violet-400', bg: 'hover:bg-violet-500/10' },
+        ].map(({ to, icon: Icon, label, color, bg }) => (
+          <Link
+            key={to}
+            to={to}
+            className={`flex items-center gap-2 p-3 rounded-xl bg-surface-800 border border-white/5 ${bg} transition-colors`}
+          >
+            <Icon className={`w-5 h-5 ${color}`} />
+            <span className="text-sm font-medium">{label}</span>
+          </Link>
+        ))}
       </div>
 
       <div className="space-y-6">

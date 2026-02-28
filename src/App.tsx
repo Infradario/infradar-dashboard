@@ -34,19 +34,19 @@ export default function App() {
             <Route path="/clusters" element={<Clusters />} />
             <Route path="/clusters/new" element={<NewCluster />} />
             <Route path="/clusters/:id" element={<ClusterDetail />} />
-            <Route path="/clusters/:id/attack-paths" element={<AttackPaths />} />
             <Route path="/clusters/:id/simulator" element={<Simulator />} />
             <Route path="/clusters/:id/costs" element={<Costs />} />
-            <Route path="/clusters/:id/blast-radius" element={<BlastRadius />} />
             <Route path="/clusters/:id/timeline" element={<Timeline />} />
             <Route path="/clusters/:id/topology" element={<ClusterMap />} />
             <Route path="/clusters/:id/heatmap" element={<Heatmap />} />
             <Route path="/clusters/:id/events" element={<Events />} />
             <Route path="/clusters/:id/alerts" element={<Alerts />} />
-            <Route path="/clusters/:id/ns-compare" element={<NSCompare />} />
             <Route path="/clusters/:id/golden-signals" element={<GoldenSignals />} />
             <Route path="/security" element={<Security />} />
             <Route path="/security/:id" element={<SecurityDetail />} />
+            <Route path="/security/:id/attack-paths" element={<AttackPaths />} />
+            <Route path="/security/:id/blast-radius" element={<BlastRadius />} />
+            <Route path="/security/:id/ns-compare" element={<NSCompare />} />
           </Route>
         </Routes>
       </AuthProvider>
