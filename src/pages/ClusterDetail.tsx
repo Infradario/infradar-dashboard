@@ -153,8 +153,8 @@ export default function ClusterDetail() {
 function OverviewTab({ snapshot, security }: { snapshot: Snapshot; security: SecurityReport | null }) {
   const s = snapshot.summary;
 
-  const cpuUtil = s.cpu_utilization_percent ?? 0;
-  const memUtil = s.mem_utilization_percent ?? 0;
+  const cpuUtil = Math.round((s.cpu_utilization_percent ?? 0) * 100) / 100;
+  const memUtil = Math.round((s.mem_utilization_percent ?? 0) * 100) / 100;
 
   const cpuData = [
     { name: 'Used', value: cpuUtil },
@@ -177,8 +177,8 @@ function OverviewTab({ snapshot, security }: { snapshot: Snapshot; security: Sec
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <StatCard icon={<Server className="w-5 h-5 text-cyan-400" />} label="Nodes" value={s.node_count} sub="total" />
         <StatCard icon={<Activity className="w-5 h-5 text-emerald-400" />} label="Pods" value={s.pod_count} sub="total" />
-        <StatCard icon={<Cpu className="w-5 h-5 text-purple-400" />} label="CPU Usage" value={`${cpuUtil}%`} sub={`${formatCpu(s.total_cpu_usage_millis)} / ${formatCpu(s.total_cpu_request_millis)}`} />
-        <StatCard icon={<HardDrive className="w-5 h-5 text-orange-400" />} label="Memory Usage" value={`${memUtil}%`} sub={`${formatMem(s.total_mem_usage_bytes)} / ${formatMem(s.total_mem_request_bytes)}`} />
+        <StatCard icon={<Cpu className="w-5 h-5 text-purple-400" />} label="CPU Usage" value={`${cpuUtil.toFixed(2)}%`} sub={`${formatCpu(s.total_cpu_usage_millis)} / ${formatCpu(s.total_cpu_request_millis)}`} />
+        <StatCard icon={<HardDrive className="w-5 h-5 text-orange-400" />} label="Memory Usage" value={`${memUtil.toFixed(2)}%`} sub={`${formatMem(s.total_mem_usage_bytes)} / ${formatMem(s.total_mem_request_bytes)}`} />
       </div>
 
       {/* Charts row */}
@@ -467,8 +467,8 @@ function UtilizationChart({ data, value, color }: { data: { name: string; value:
             data={data}
             cx="50%"
             cy="50%"
-            innerRadius={45}
-            outerRadius={60}
+            innerRadius={50}
+            outerRadius={65}
             startAngle={90}
             endAngle={-270}
             dataKey="value"
@@ -479,7 +479,7 @@ function UtilizationChart({ data, value, color }: { data: { name: string; value:
         </PieChart>
       </ResponsiveContainer>
       <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-2xl font-bold">{value}%</span>
+        <span className="text-lg font-bold">{Number.isInteger(value) ? value : value.toFixed(2)}%</span>
       </div>
     </div>
   );
