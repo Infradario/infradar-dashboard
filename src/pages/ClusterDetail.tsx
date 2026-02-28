@@ -236,25 +236,26 @@ function OverviewTab({ snapshot, security }: { snapshot: Snapshot; security: Sec
 }
 
 function NodesTab({ snapshot }: { snapshot: Snapshot }) {
+  const fmtCpu = (m: number) => m >= 1000 ? `${(m / 1000).toFixed(1)} cores` : `${m}m`;
+  const fmtMem = (b: number) => b >= 1073741824 ? `${(b / 1073741824).toFixed(1)}Gi` : `${Math.round(b / 1048576)}Mi`;
+
   return (
     <div className="bg-surface-800 border border-white/5 rounded-xl overflow-hidden">
       <table className="w-full">
         <thead>
           <tr className="border-b border-white/5">
             <th className="text-left text-xs text-gray-400 font-medium p-4">Name</th>
-            <th className="text-left text-xs text-gray-400 font-medium p-4">Role</th>
             <th className="text-left text-xs text-gray-400 font-medium p-4">Status</th>
             <th className="text-left text-xs text-gray-400 font-medium p-4">Version</th>
-            <th className="text-left text-xs text-gray-400 font-medium p-4">CPU</th>
+            <th className="text-left text-xs text-gray-400 font-medium p-4">CPU Capacity</th>
             <th className="text-left text-xs text-gray-400 font-medium p-4">Memory</th>
-            <th className="text-left text-xs text-gray-400 font-medium p-4">OS/Arch</th>
+            <th className="text-left text-xs text-gray-400 font-medium p-4">Pods</th>
           </tr>
         </thead>
         <tbody>
           {snapshot.nodes.map((node) => (
             <tr key={node.name} className="border-b border-white/5 last:border-0">
               <td className="p-4 font-medium text-sm">{node.name}</td>
-              <td className="p-4 text-sm text-gray-300">{node.role}</td>
               <td className="p-4">
                 {node.ready ? (
                   <span className="text-xs font-medium px-2.5 py-1 rounded-full text-emerald-400 bg-emerald-400/10">Ready</span>
@@ -262,10 +263,10 @@ function NodesTab({ snapshot }: { snapshot: Snapshot }) {
                   <span className="text-xs font-medium px-2.5 py-1 rounded-full text-red-400 bg-red-400/10">NotReady</span>
                 )}
               </td>
-              <td className="p-4 text-sm text-gray-400">{node.kubelet_version}</td>
-              <td className="p-4 text-sm text-gray-300">{node.cpu_usage} / {node.cpu_capacity}</td>
-              <td className="p-4 text-sm text-gray-300">{node.mem_usage} / {node.mem_capacity}</td>
-              <td className="p-4 text-sm text-gray-400">{node.os}/{node.arch}</td>
+              <td className="p-4 text-sm text-gray-400">{node.kubelet_version || '-'}</td>
+              <td className="p-4 text-sm text-gray-300">{fmtCpu(node.cpu_capacity_millis)}</td>
+              <td className="p-4 text-sm text-gray-300">{fmtMem(node.memory_capacity_bytes)}</td>
+              <td className="p-4 text-sm text-gray-300">{node.pod_count}</td>
             </tr>
           ))}
         </tbody>
@@ -318,9 +319,9 @@ function PodsTab({ snapshot }: { snapshot: Snapshot }) {
                     {pod.status}
                   </span>
                 </td>
-                <td className="p-4 text-sm text-gray-300 font-mono">{pod.image}:{pod.image_tag}</td>
-                <td className="p-4 text-sm text-gray-400">{pod.cpu_request || '-'} / {pod.cpu_limit || '-'}</td>
-                <td className="p-4 text-sm text-gray-400">{pod.mem_request || '-'} / {pod.mem_limit || '-'}</td>
+                <td className="p-4 text-sm text-gray-300 font-mono">{pod.image || '-'}:{pod.image_tag || '-'}</td>
+                <td className="p-4 text-sm text-gray-400">{pod.cpu_request_millis || 0}m / {pod.cpu_limit_millis || 0}m</td>
+                <td className="p-4 text-sm text-gray-400">{Math.round((pod.mem_request_bytes || 0) / 1048576)}Mi / {Math.round((pod.mem_limit_bytes || 0) / 1048576)}Mi</td>
                 <td className="p-4">
                   <span className={`text-sm ${pod.restart_count > 3 ? 'text-red-400' : 'text-gray-400'}`}>
                     {pod.restart_count}

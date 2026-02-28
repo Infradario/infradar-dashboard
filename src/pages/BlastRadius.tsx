@@ -33,8 +33,15 @@ export default function BlastRadius() {
     setLoading(false);
   };
 
-  const namespaces = snapshot ? [...new Set(snapshot.pods.map(p => p.namespace))] : [];
+  const namespaces = snapshot ? [...new Set(snapshot.pods.map(p => p.namespace))].sort() : [];
   const pods = snapshot?.pods.filter(p => !targetNs || p.namespace === targetNs) || [];
+
+  // Auto-select first namespace when switching to pod mode
+  useEffect(() => {
+    if (targetType === 'pod' && !targetNs && namespaces.length > 0) {
+      setTargetNs(namespaces[0]);
+    }
+  }, [targetType, targetNs, namespaces]);
 
   const riskColors: Record<string, string> = {
     full: 'text-red-400 bg-red-500/10 border-red-500/20',
@@ -104,7 +111,7 @@ export default function BlastRadius() {
               <option value="">Select...</option>
               {targetType === 'node'
                 ? snapshot?.nodes.map(n => <option key={n.name} value={n.name}>{n.name}</option>)
-                : pods.map(p => <option key={`${p.namespace}/${p.name}`} value={p.name}>{p.namespace}/{p.name}</option>)
+                : pods.map(p => <option key={`${p.namespace}/${p.name}`} value={p.name}>{p.name}</option>)
               }
             </select>
           </div>

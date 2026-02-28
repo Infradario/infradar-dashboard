@@ -134,34 +134,40 @@ export interface Snapshot {
 
 export interface NodeInfo {
   name: string;
-  role: string;
-  os: string;
-  arch: string;
-  kubelet_version: string;
-  cpu_capacity: string;
-  mem_capacity: string;
-  cpu_allocatable: string;
-  mem_allocatable: string;
-  cpu_usage: string;
-  mem_usage: string;
+  instance_type?: string;
+  region?: string;
+  kubelet_version?: string;
+  cpu_capacity_millis: number;
+  memory_capacity_bytes: number;
+  cpu_allocatable_millis: number;
+  mem_allocatable_bytes: number;
+  pod_count: number;
   ready: boolean;
+  cost_per_hour?: number;
 }
 
 export interface PodInfo {
   name: string;
   namespace: string;
-  node: string;
+  node_name: string;
   status: string;
-  image: string;
+  image?: string;
   image_tag: string;
-  cpu_request: string;
-  cpu_limit: string;
-  mem_request: string;
-  mem_limit: string;
+  cpu_request_millis: number;
+  cpu_limit_millis: number;
+  mem_request_bytes: number;
+  mem_limit_bytes: number;
+  cpu_usage_millis: number;
+  mem_usage_bytes: number;
   restart_count: number;
-  ready: boolean;
   run_as_root: boolean;
   privileged: boolean;
+  host_network: boolean;
+  host_pid: boolean;
+  has_liveness_probe: boolean;
+  has_readiness_probe: boolean;
+  has_security_context: boolean;
+  read_only_root_fs: boolean;
 }
 
 export interface SnapshotSummary {
