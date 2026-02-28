@@ -1,15 +1,17 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Server, Shield, LogOut, Radar, Sun, Moon, Monitor } from 'lucide-react';
+import { LayoutDashboard, Server, Shield, LogOut, Radar, Sun, Moon, Monitor, Plus, ChevronDown } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../hooks/useTheme';
+import { useCluster } from '../hooks/useCluster';
 
 export default function Sidebar() {
   const { user, logout } = useAuth();
   const { mode, setMode } = useTheme();
+  const { clusters, selected, selectCluster } = useCluster();
 
   const links = [
     { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
-    { to: '/clusters', icon: Server, label: 'Clusters' },
+    { to: '/details', icon: Server, label: 'Details' },
     { to: '/security', icon: Shield, label: 'Security' },
   ];
 
@@ -26,6 +28,35 @@ export default function Sidebar() {
           <Radar className="w-8 h-8 text-cyan-400" />
           <span className="text-xl font-bold">Infradar</span>
         </div>
+      </div>
+
+      {/* Cluster Selector */}
+      <div className="px-4 pt-4 pb-2">
+        <label className="text-xs text-gray-500 block mb-1.5 px-1">Cluster</label>
+        {clusters.length > 0 ? (
+          <div className="relative">
+            <select
+              value={selected?.id || ''}
+              onChange={(e) => selectCluster(e.target.value)}
+              className="w-full bg-surface-800 border border-white/10 rounded-lg px-3 py-2.5 text-sm font-medium appearance-none cursor-pointer focus:outline-none focus:border-cyan-500 transition-colors pr-8"
+            >
+              {clusters.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name} ({c.provider.toUpperCase()})
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="w-4 h-4 text-gray-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          </div>
+        ) : (
+          <NavLink
+            to="/clusters/new"
+            className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium text-cyan-400 bg-cyan-500/10 border border-cyan-500/20"
+          >
+            <Plus className="w-4 h-4" />
+            Add Cluster
+          </NavLink>
+        )}
       </div>
 
       <nav className="flex-1 p-4 space-y-1">

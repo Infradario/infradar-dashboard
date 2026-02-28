@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
-  ArrowLeft, Server, Cpu, HardDrive, Activity,
+  Server, Cpu, HardDrive, Activity,
   AlertTriangle,
   Play, DollarSign, Clock,
   Network, Flame, Radio, Bell, Gauge,
@@ -10,27 +10,33 @@ import {
   PieChart, Pie, Cell, ResponsiveContainer,
 } from 'recharts';
 import { api } from '../lib/api';
-import type { Cluster, Snapshot } from '../lib/api';
+import type { Snapshot } from '../lib/api';
+import { useCluster } from '../hooks/useCluster';
 
 export default function ClusterDetail() {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const [cluster, setCluster] = useState<Cluster | null>(null);
+  const { selected } = useCluster();
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
   const [tab, setTab] = useState<'overview' | 'nodes' | 'pods'>('overview');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!id) return;
-    Promise.all([
-      api.getCluster(id).catch(() => null),
-      api.getLatestSnapshot(id).catch(() => null),
-    ]).then(([c, s]) => {
-      setCluster(c);
+    if (!selected) { setLoading(false); return; }
+    setLoading(true);
+    api.getLatestSnapshot(selected.id).catch(() => null).then((s) => {
       setSnapshot(s);
       setLoading(false);
     });
-  }, [id]);
+  }, [selected?.id]);
+
+  if (!selected) {
+    return (
+      <div className="bg-surface-800 border border-white/5 rounded-xl p-12 text-center">
+        <Server className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+        <h3 className="text-lg font-semibold mb-2">No cluster selected</h3>
+        <p className="text-gray-400 text-sm">Select a cluster from the sidebar or add a new one</p>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -40,9 +46,7 @@ export default function ClusterDetail() {
     );
   }
 
-  if (!cluster) {
-    return <div className="text-center text-gray-400 py-20">Cluster not found</div>;
-  }
+  const id = selected.id;
 
   const tabs = [
     { key: 'overview', label: 'Overview' },
@@ -52,20 +56,12 @@ export default function ClusterDetail() {
 
   return (
     <div>
-      <button
-        onClick={() => navigate('/clusters')}
-        className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-6 text-sm"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        Back to Clusters
-      </button>
-
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold">{cluster.name}</h1>
+          <h1 className="text-2xl font-bold">{selected.name}</h1>
           <div className="flex items-center gap-3 mt-1">
-            <span className="text-sm text-gray-400">{cluster.provider.toUpperCase()}</span>
-            <StatusBadge status={cluster.status} />
+            <span className="text-sm text-gray-400">{selected.provider.toUpperCase()}</span>
+            <StatusBadge status={selected.status} />
           </div>
         </div>
       </div>
@@ -85,18 +81,18 @@ export default function ClusterDetail() {
         ))}
       </div>
 
-      {/* Innovative Features */}
+      {/* Feature Links */}
       {snapshot && (
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 mb-6">
           {[
-            { to: `/clusters/${id}/simulator`, icon: Play, label: 'What-If Simulator', color: 'text-purple-400', bg: 'hover:bg-purple-500/10' },
-            { to: `/clusters/${id}/costs`, icon: DollarSign, label: 'Cost Analysis', color: 'text-emerald-400', bg: 'hover:bg-emerald-500/10' },
-            { to: `/clusters/${id}/timeline`, icon: Clock, label: 'Timeline', color: 'text-cyan-400', bg: 'hover:bg-cyan-500/10' },
-            { to: `/clusters/${id}/topology`, icon: Network, label: 'Cluster Map', color: 'text-sky-400', bg: 'hover:bg-sky-500/10' },
-            { to: `/clusters/${id}/heatmap`, icon: Flame, label: 'Heatmap', color: 'text-amber-400', bg: 'hover:bg-amber-500/10' },
-            { to: `/clusters/${id}/events`, icon: Radio, label: 'Events', color: 'text-indigo-400', bg: 'hover:bg-indigo-500/10' },
-            { to: `/clusters/${id}/alerts`, icon: Bell, label: 'Alerts', color: 'text-rose-400', bg: 'hover:bg-rose-500/10' },
-            { to: `/clusters/${id}/golden-signals`, icon: Gauge, label: 'Golden Signals', color: 'text-teal-400', bg: 'hover:bg-teal-500/10' },
+            { to: `/details/${id}/simulator`, icon: Play, label: 'What-If Simulator', color: 'text-purple-400', bg: 'hover:bg-purple-500/10' },
+            { to: `/details/${id}/costs`, icon: DollarSign, label: 'Cost Analysis', color: 'text-emerald-400', bg: 'hover:bg-emerald-500/10' },
+            { to: `/details/${id}/timeline`, icon: Clock, label: 'Timeline', color: 'text-cyan-400', bg: 'hover:bg-cyan-500/10' },
+            { to: `/details/${id}/topology`, icon: Network, label: 'Cluster Map', color: 'text-sky-400', bg: 'hover:bg-sky-500/10' },
+            { to: `/details/${id}/heatmap`, icon: Flame, label: 'Heatmap', color: 'text-amber-400', bg: 'hover:bg-amber-500/10' },
+            { to: `/details/${id}/events`, icon: Radio, label: 'Events', color: 'text-indigo-400', bg: 'hover:bg-indigo-500/10' },
+            { to: `/details/${id}/alerts`, icon: Bell, label: 'Alerts', color: 'text-rose-400', bg: 'hover:bg-rose-500/10' },
+            { to: `/details/${id}/golden-signals`, icon: Gauge, label: 'Golden Signals', color: 'text-teal-400', bg: 'hover:bg-teal-500/10' },
           ].map(({ to, icon: Icon, label, color, bg }) => (
             <Link
               key={to}

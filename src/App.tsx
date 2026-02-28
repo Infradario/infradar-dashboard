@@ -8,7 +8,7 @@ import Dashboard from './pages/Dashboard';
 import Clusters from './pages/Clusters';
 import NewCluster from './pages/NewCluster';
 import ClusterDetail from './pages/ClusterDetail';
-import Security, { SecurityDetail } from './pages/Security';
+import Security from './pages/Security';
 import AttackPaths from './pages/AttackPaths';
 import Simulator from './pages/Simulator';
 import Costs from './pages/Costs';
@@ -33,17 +33,18 @@ export default function App() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/clusters" element={<Clusters />} />
             <Route path="/clusters/new" element={<NewCluster />} />
-            <Route path="/clusters/:id" element={<ClusterDetail />} />
-            <Route path="/clusters/:id/simulator" element={<Simulator />} />
-            <Route path="/clusters/:id/costs" element={<Costs />} />
-            <Route path="/clusters/:id/timeline" element={<Timeline />} />
-            <Route path="/clusters/:id/topology" element={<ClusterMap />} />
-            <Route path="/clusters/:id/heatmap" element={<Heatmap />} />
-            <Route path="/clusters/:id/events" element={<Events />} />
-            <Route path="/clusters/:id/alerts" element={<Alerts />} />
-            <Route path="/clusters/:id/golden-signals" element={<GoldenSignals />} />
+            {/* Details section */}
+            <Route path="/details" element={<ClusterDetail />} />
+            <Route path="/details/:id/simulator" element={<Simulator />} />
+            <Route path="/details/:id/costs" element={<Costs />} />
+            <Route path="/details/:id/timeline" element={<Timeline />} />
+            <Route path="/details/:id/topology" element={<ClusterMap />} />
+            <Route path="/details/:id/heatmap" element={<Heatmap />} />
+            <Route path="/details/:id/events" element={<Events />} />
+            <Route path="/details/:id/alerts" element={<Alerts />} />
+            <Route path="/details/:id/golden-signals" element={<GoldenSignals />} />
+            {/* Security section */}
             <Route path="/security" element={<Security />} />
-            <Route path="/security/:id" element={<SecurityDetail />} />
             <Route path="/security/:id/attack-paths" element={<AttackPaths />} />
             <Route path="/security/:id/blast-radius" element={<BlastRadius />} />
             <Route path="/security/:id/ns-compare" element={<NSCompare />} />

@@ -1,5 +1,6 @@
 import { Outlet, Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { ClusterProvider } from '../hooks/useCluster';
 import Sidebar from './Sidebar';
 
 export default function Layout() {
@@ -16,11 +17,13 @@ export default function Layout() {
   if (!user) return <Navigate to="/login" />;
 
   return (
-    <div className="min-h-screen">
-      <Sidebar />
-      <main className="ml-64 p-8">
-        <Outlet />
-      </main>
-    </div>
+    <ClusterProvider>
+      <div className="min-h-screen">
+        <Sidebar />
+        <main className="ml-64 p-8">
+          <Outlet />
+        </main>
+      </div>
+    </ClusterProvider>
   );
 }
