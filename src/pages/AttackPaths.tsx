@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { Shield, AlertTriangle, ChevronDown, ChevronUp, Target, Zap } from 'lucide-react';
+import { Shield, AlertTriangle, ChevronDown, ChevronUp, Target, Zap, Wrench } from 'lucide-react';
 import { api } from '../lib/api';
 import type { AttackPathAnalysis, AttackPath } from '../lib/api';
 
@@ -153,6 +153,43 @@ function AttackPathDetail({ path, nodeTypeColor }: { path: AttackPath; nodeTypeC
           ))}
         </div>
       </div>
+
+      {/* Remediation Steps */}
+      {path.remediations && path.remediations.length > 0 && (
+        <div className="mt-4 bg-emerald-500/5 border border-emerald-500/20 rounded-lg p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Wrench className="w-4 h-4 text-emerald-400" />
+            <span className="text-sm font-semibold text-emerald-400">How to Fix This</span>
+          </div>
+          <div className="space-y-3">
+            {path.remediations.map((rem) => (
+              <div key={rem.step} className="flex gap-3">
+                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs font-bold mt-0.5">
+                  {rem.step}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-sm font-medium">{rem.action}</span>
+                    <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${
+                      rem.priority === 'immediate' ? 'bg-red-500/20 text-red-400' :
+                      rem.priority === 'short_term' ? 'bg-yellow-500/20 text-yellow-400' :
+                      'bg-blue-500/20 text-blue-400'
+                    }`}>
+                      {rem.priority.replace('_', ' ')}
+                    </span>
+                  </div>
+                  <div className="text-xs text-gray-400 mb-2">{rem.description}</div>
+                  {rem.command && (
+                    <pre className="text-xs font-mono bg-surface-900 text-cyan-400 rounded-lg p-3 overflow-x-auto whitespace-pre-wrap break-words">
+                      {rem.command}
+                    </pre>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

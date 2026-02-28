@@ -212,6 +212,15 @@ export interface AttackPath {
   risk: string;
   nodes: AttackPathNode[];
   edges: AttackPathEdge[];
+  remediations: AttackPathRemediation[];
+}
+
+export interface AttackPathRemediation {
+  step: number;
+  action: string;
+  command?: string;
+  description: string;
+  priority: string;
 }
 
 export interface AttackPathNode {
