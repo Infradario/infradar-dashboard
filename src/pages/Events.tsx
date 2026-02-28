@@ -23,7 +23,7 @@ export default function Events() {
     );
   }
 
-  if (!data || data.events.length === 0) {
+  if (!data || !data.events || data.events.length === 0) {
     return (
       <div className="bg-surface-800 border border-white/5 rounded-xl p-12 text-center">
         <Activity className="w-12 h-12 text-gray-600 mx-auto mb-4" />
@@ -33,7 +33,8 @@ export default function Events() {
     );
   }
 
-  const filtered = filter === 'all' ? data.events : data.events.filter(e => e.type === filter);
+  const events = data.events || [];
+  const filtered = filter === 'all' ? events : events.filter(e => e.type === filter);
 
   const eventIcon = (type: string) => {
     switch (type) {
