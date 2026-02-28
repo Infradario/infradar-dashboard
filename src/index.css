@@ -70,6 +70,10 @@ html.light [class*="text-white"]:not([class*="text-white/"]) {
   color: #0f172a !important;
 }
 
+html.light [class*="text-gray-200"] {
+  color: #1e293b !important;
+}
+
 html.light [class*="text-gray-300"] {
   color: #334155 !important;
 }
