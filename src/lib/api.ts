@@ -110,6 +110,9 @@ export const api = {
 
   getGoldenSignals: (clusterId: string) =>
     request<GoldenSignals>(`/api/v1/clusters/${clusterId}/golden-signals`),
+
+  getServiceMesh: (clusterId: string) =>
+    request<ServiceMeshResponse>(`/api/v1/clusters/${clusterId}/service-mesh`),
 };
 
 // Types
@@ -561,4 +564,25 @@ export interface GoldenSignals {
     mem_request: number;
     health: string;
   }[];
+}
+
+// Service Mesh types
+export interface ServiceMeshNode {
+  id: string;
+  name: string;
+  namespace: string;
+  kind: string;
+  status: string;
+  details?: Record<string, unknown>;
+}
+
+export interface ServiceMeshEdge {
+  source: string;
+  target: string;
+  type: string;
+}
+
+export interface ServiceMeshResponse {
+  nodes: ServiceMeshNode[];
+  edges: ServiceMeshEdge[];
 }

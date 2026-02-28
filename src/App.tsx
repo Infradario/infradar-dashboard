@@ -20,6 +20,7 @@ import Events from './pages/Events';
 import Alerts from './pages/Alerts';
 import NSCompare from './pages/NSCompare';
 import GoldenSignals from './pages/GoldenSignals';
+import AppMesh from './pages/AppMesh';
 
 export default function App() {
   return (
@@ -43,6 +44,7 @@ export default function App() {
             <Route path="/details/:id/events" element={<Events />} />
             <Route path="/details/:id/alerts" element={<Alerts />} />
             <Route path="/details/:id/golden-signals" element={<GoldenSignals />} />
+            <Route path="/details/:id/app-mesh" element={<AppMesh />} />
             {/* Security section */}
             <Route path="/security" element={<Security />} />
             <Route path="/security/:id/attack-paths" element={<AttackPaths />} />

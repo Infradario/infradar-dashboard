@@ -4,7 +4,7 @@ import {
   Server, Cpu, HardDrive, Activity,
   AlertTriangle,
   Play, DollarSign, Clock,
-  Network, Flame, Radio, Bell, Gauge,
+  Network, Flame, Radio, Bell, Gauge, Share2,
 } from 'lucide-react';
 import {
   PieChart, Pie, Cell, ResponsiveContainer,
@@ -93,6 +93,7 @@ export default function ClusterDetail() {
             { to: `/details/${id}/events`, icon: Radio, label: 'Events', color: 'text-indigo-400', bg: 'hover:bg-indigo-500/10' },
             { to: `/details/${id}/alerts`, icon: Bell, label: 'Alerts', color: 'text-rose-400', bg: 'hover:bg-rose-500/10' },
             { to: `/details/${id}/golden-signals`, icon: Gauge, label: 'Golden Signals', color: 'text-teal-400', bg: 'hover:bg-teal-500/10' },
+            { to: `/details/${id}/app-mesh`, icon: Share2, label: 'App Mesh', color: 'text-pink-400', bg: 'hover:bg-pink-500/10' },
           ].map(({ to, icon: Icon, label, color, bg }) => (
             <Link
               key={to}
