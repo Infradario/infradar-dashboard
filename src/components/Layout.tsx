@@ -1,16 +1,9 @@
-import { useEffect } from 'react';
-import { Outlet, Navigate, useLocation } from 'react-router-dom';
+import { Outlet, Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import Sidebar from './Sidebar';
 
 export default function Layout() {
   const { user, loading } = useAuth();
-  const location = useLocation();
-
-  // Scroll to top on route change
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [location.pathname]);
 
   if (loading) {
     return (
@@ -26,7 +19,7 @@ export default function Layout() {
     <div className="min-h-screen">
       <Sidebar />
       <main className="ml-64 p-8">
-        <Outlet key={location.pathname} />
+        <Outlet />
       </main>
     </div>
   );

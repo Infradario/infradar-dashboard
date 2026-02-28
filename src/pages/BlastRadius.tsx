@@ -36,13 +36,6 @@ export default function BlastRadius() {
   const namespaces = snapshot ? [...new Set(snapshot.pods.map(p => p.namespace))].sort() : [];
   const pods = snapshot?.pods.filter(p => !targetNs || p.namespace === targetNs) || [];
 
-  // Auto-select first namespace when switching to pod mode
-  useEffect(() => {
-    if (targetType === 'pod' && !targetNs && namespaces.length > 0) {
-      setTargetNs(namespaces[0]);
-    }
-  }, [targetType, targetNs, namespaces]);
-
   const riskColors: Record<string, string> = {
     full: 'text-red-400 bg-red-500/10 border-red-500/20',
     partial: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20',
@@ -77,7 +70,13 @@ export default function BlastRadius() {
                 <Server className="w-4 h-4" /> Node
               </button>
               <button
-                onClick={() => { setTargetType('pod'); setTargetName(''); setResult(null); }}
+                onClick={() => {
+                  setTargetType('pod');
+                  setTargetName('');
+                  setResult(null);
+                  const nsList = snapshot ? [...new Set(snapshot.pods.map(p => p.namespace))].sort() : [];
+                  if (nsList.length > 0) setTargetNs(nsList[0]);
+                }}
                 className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
                   targetType === 'pod' ? 'border-cyan-500/30 bg-cyan-500/10 text-cyan-400' : 'border-white/10 text-gray-400'
                 }`}
@@ -135,22 +134,22 @@ export default function BlastRadius() {
       {result && (
         <div className="space-y-4">
           {/* Impact */}
-          <div className={`border rounded-xl p-5 ${riskColors[result.impact.downtime_risk] || riskColors.none}`}>
+          <div className={`border rounded-xl p-5 ${riskColors[result.impact?.downtime_risk] || riskColors.none}`}>
             <div className="flex items-center gap-3">
               <AlertTriangle className="w-6 h-6" />
               <div>
-                <div className="font-semibold uppercase text-sm tracking-wider">{result.impact.downtime_risk} Downtime Risk</div>
-                <div className="text-sm opacity-80 mt-1">{result.impact.description}</div>
+                <div className="font-semibold uppercase text-sm tracking-wider">{result.impact?.downtime_risk || 'unknown'} Downtime Risk</div>
+                <div className="text-sm opacity-80 mt-1">{result.impact?.description}</div>
               </div>
             </div>
             <div className="mt-3 grid grid-cols-2 gap-4 text-sm">
-              <div>Affected Pods: <span className="font-bold">{result.impact.affected_pods}</span></div>
-              <div>Affected Services: <span className="font-bold">{result.impact.affected_services}</span></div>
+              <div>Affected Pods: <span className="font-bold">{result.impact?.affected_pods ?? 0}</span></div>
+              <div>Affected Services: <span className="font-bold">{result.impact?.affected_services ?? 0}</span></div>
             </div>
           </div>
 
           {/* Cascade Chain */}
-          {result.impact.cascade_chain && result.impact.cascade_chain.length > 0 && (
+          {result.impact?.cascade_chain && result.impact.cascade_chain.length > 0 && (
             <div className="bg-surface-800 border border-white/5 rounded-xl p-5">
               <h4 className="text-sm font-medium text-gray-400 mb-3">Cascade Chain</h4>
               <div className="space-y-2">
@@ -164,36 +163,38 @@ export default function BlastRadius() {
           )}
 
           {/* Blast Zones */}
-          <div className="bg-surface-800 border border-white/5 rounded-xl p-5">
-            <h4 className="text-sm font-medium text-gray-400 mb-4">Impact Zones</h4>
-            <div className="space-y-4">
-              {result.zones.map((zone) => {
-                const colors = zoneColors[zone.level] || zoneColors[2];
-                return (
-                  <div key={zone.level} className={`border rounded-xl p-4 ${colors.border} ${colors.bg}`}>
-                    <div className={`text-sm font-semibold mb-3 ${colors.text}`}>
-                      Zone {zone.level}: {zone.label} ({zone.services.length})
+          {(result.zones || []).length > 0 && (
+            <div className="bg-surface-800 border border-white/5 rounded-xl p-5">
+              <h4 className="text-sm font-medium text-gray-400 mb-4">Impact Zones</h4>
+              <div className="space-y-4">
+                {(result.zones || []).map((zone) => {
+                  const colors = zoneColors[zone.level] || zoneColors[2];
+                  return (
+                    <div key={zone.level} className={`border rounded-xl p-4 ${colors.border} ${colors.bg}`}>
+                      <div className={`text-sm font-semibold mb-3 ${colors.text}`}>
+                        Zone {zone.level}: {zone.label} ({(zone.services || []).length})
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {(zone.services || []).map((svc) => (
+                          <div key={svc.id} className={`flex items-center gap-2 px-3 py-2 rounded-lg bg-surface-900/50 text-sm ${
+                            svc.critical ? 'ring-1 ring-red-500/50' : ''
+                          }`}>
+                            {svc.type === 'node' ? <Server className="w-3.5 h-3.5 text-gray-400" /> : <Boxes className="w-3.5 h-3.5 text-gray-400" />}
+                            <span className="font-medium">{svc.name}</span>
+                            {svc.namespace && <span className="text-xs text-gray-500">{svc.namespace}</span>}
+                            {svc.critical && <span className="text-xs text-red-400 font-medium">CRITICAL</span>}
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <div className="flex flex-wrap gap-2">
-                      {zone.services.map((svc) => (
-                        <div key={svc.id} className={`flex items-center gap-2 px-3 py-2 rounded-lg bg-surface-900/50 text-sm ${
-                          svc.critical ? 'ring-1 ring-red-500/50' : ''
-                        }`}>
-                          {svc.type === 'node' ? <Server className="w-3.5 h-3.5 text-gray-400" /> : <Boxes className="w-3.5 h-3.5 text-gray-400" />}
-                          <span className="font-medium">{svc.name}</span>
-                          {svc.namespace && <span className="text-xs text-gray-500">{svc.namespace}</span>}
-                          {svc.critical && <span className="text-xs text-red-400 font-medium">CRITICAL</span>}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Dependency Graph */}
-          {result.dependencies.length > 0 && (
+          {(result.dependencies || []).length > 0 && (
             <div className="bg-surface-800 border border-white/5 rounded-xl p-5">
               <h4 className="text-sm font-medium text-gray-400 mb-3">Dependencies ({result.dependencies.length})</h4>
               <div className="space-y-1">
