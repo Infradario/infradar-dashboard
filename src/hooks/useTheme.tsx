@@ -1,31 +1,73 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
 
-type Theme = 'dark' | 'light';
+type ThemeMode = 'dark' | 'light' | 'auto';
+type ResolvedTheme = 'dark' | 'light';
 
 interface ThemeContextType {
-  theme: Theme;
-  toggle: () => void;
+  mode: ThemeMode;
+  resolved: ResolvedTheme;
+  setMode: (mode: ThemeMode) => void;
 }
 
-const ThemeContext = createContext<ThemeContextType>({ theme: 'dark', toggle: () => {} });
+const ThemeContext = createContext<ThemeContextType>({
+  mode: 'auto',
+  resolved: 'dark',
+  setMode: () => {},
+});
+
+function getSystemTheme(): ResolvedTheme {
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+function resolveTheme(mode: ThemeMode): ResolvedTheme {
+  if (mode === 'auto') return getSystemTheme();
+  return mode;
+}
+
+function applyTheme(resolved: ResolvedTheme) {
+  document.documentElement.classList.toggle('dark', resolved === 'dark');
+  document.documentElement.classList.toggle('light', resolved === 'light');
+}
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<Theme>(() => {
+  const [mode, setModeState] = useState<ThemeMode>(() => {
     const saved = localStorage.getItem('infradar-theme');
-    return (saved === 'light' ? 'light' : 'dark') as Theme;
+    if (saved === 'dark' || saved === 'light' || saved === 'auto') return saved;
+    return 'auto';
   });
 
-  useEffect(() => {
-    localStorage.setItem('infradar-theme', theme);
-    document.documentElement.classList.toggle('dark', theme === 'dark');
-    document.documentElement.classList.toggle('light', theme === 'light');
-  }, [theme]);
+  const [resolved, setResolved] = useState<ResolvedTheme>(() => resolveTheme(mode));
 
-  const toggle = () => setTheme((t) => (t === 'dark' ? 'light' : 'dark'));
+  const setMode = useCallback((m: ThemeMode) => {
+    setModeState(m);
+    localStorage.setItem('infradar-theme', m);
+  }, []);
+
+  // Re-resolve when mode changes
+  useEffect(() => {
+    const r = resolveTheme(mode);
+    setResolved(r);
+    applyTheme(r);
+  }, [mode]);
+
+  // Listen for system theme changes when in auto mode
+  useEffect(() => {
+    if (mode !== 'auto') return;
+
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const handler = () => {
+      const r = getSystemTheme();
+      setResolved(r);
+      applyTheme(r);
+    };
+
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, [mode]);
 
   return (
-    <ThemeContext.Provider value={{ theme, toggle }}>
+    <ThemeContext.Provider value={{ mode, resolved, setMode }}>
       {children}
     </ThemeContext.Provider>
   );
