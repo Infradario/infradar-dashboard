@@ -93,7 +93,7 @@ export default function ClusterMap() {
             {nodes.map(node => (
               <div
                 key={node.id}
-                className={`border rounded-lg p-3 transition-colors ${
+                className={`border rounded-lg p-3 transition-colors overflow-hidden ${
                   node.status === 'healthy' ? 'border-emerald-500/30 bg-emerald-500/5' :
                   node.status === 'warning' ? 'border-yellow-500/30 bg-yellow-500/5' :
                   'border-red-500/30 bg-red-500/5'
@@ -107,9 +107,11 @@ export default function ClusterMap() {
                 {node.metadata && (
                   <div className="space-y-1">
                     {Object.entries(node.metadata).slice(0, 4).map(([k, v]) => (
-                      <div key={k} className="flex justify-between text-[11px]">
-                        <span className="text-gray-500">{k.replace(/_/g, ' ')}</span>
-                        <span className="text-gray-300 font-mono">{String(v)}</span>
+                      <div key={k} className="flex gap-2 text-[11px] min-w-0">
+                        <span className="text-gray-500 flex-shrink-0">{k.replace(/_/g, ' ')}</span>
+                        <span className="text-gray-300 font-mono ml-auto overflow-hidden max-w-[65%]">
+                          <span className="meta-scroll block truncate hover:animate-none">{String(v)}</span>
+                        </span>
                       </div>
                     ))}
                   </div>

@@ -227,6 +227,24 @@ html.light .mesh-card__name { color: #1e293b !important; }
 html.light .mesh-card__kind { color: #64748b !important; }
 html.light .mesh-edge { stroke: rgba(0, 0, 0, 0.15) !important; }
 
+/* ===== METADATA SCROLL ON HOVER ===== */
+.meta-scroll {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.meta-scroll:hover {
+  overflow: visible;
+  text-overflow: unset;
+  animation: meta-marquee 4s linear infinite;
+  width: max-content;
+}
+@keyframes meta-marquee {
+  0%   { transform: translateX(0); }
+  10%  { transform: translateX(0); }
+  90%  { transform: translateX(calc(-100% + 100px)); }
+  100% { transform: translateX(calc(-100% + 100px)); }
+}
+
 /* ===== BASE STYLES ===== */
 body {
   @apply antialiased;
