@@ -1,22 +1,22 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { DollarSign, TrendingDown, AlertTriangle, Zap } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { api } from '../lib/api';
 import type { CostReport } from '../lib/api';
+import { usePolling } from '../hooks/usePolling';
 
 const PIE_COLORS = ['#22d3ee', '#a855f7', '#f97316', '#ef4444', '#34d399', '#fbbf24', '#60a5fa', '#f472b6'];
 
 export default function Costs() {
   const { id } = useParams<{ id: string }>();
-  const [data, setData] = useState<CostReport | null>(null);
-  const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<'overview' | 'pods' | 'namespaces'>('overview');
 
-  useEffect(() => {
-    if (!id) return;
-    api.getCosts(id).then(setData).catch(() => null).finally(() => setLoading(false));
-  }, [id]);
+  const { data, loading } = usePolling<CostReport | null>(
+    () => id ? api.getCosts(id).catch(() => null) : Promise.resolve(null),
+    60000,
+    [id],
+  );
 
   if (loading) {
     return (

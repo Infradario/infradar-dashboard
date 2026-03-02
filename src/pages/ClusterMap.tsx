@@ -1,19 +1,28 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { Network, Server, Box, Layers, CheckCircle, AlertTriangle, XCircle } from 'lucide-react';
 import { api } from '../lib/api';
 import type { ClusterTopology, TopologyNode } from '../lib/api';
+import { usePolling } from '../hooks/usePolling';
+import { LiveIndicator } from '../components/LiveIndicator';
 
 export default function ClusterMap() {
   const { id } = useParams<{ id: string }>();
-  const [data, setData] = useState<ClusterTopology | null>(null);
-  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'node' | 'pod' | 'namespace'>('all');
+  const [selectedNs, setSelectedNs] = useState<string>('all');
 
-  useEffect(() => {
-    if (!id) return;
-    api.getTopology(id).then(setData).catch(() => null).finally(() => setLoading(false));
-  }, [id]);
+  const { data, loading, lastUpdated } = usePolling<ClusterTopology | null>(
+    () => id ? api.getTopology(id).catch(() => null) : Promise.resolve(null),
+    60000,
+    [id],
+  );
+
+  const namespaces = useMemo(() => {
+    if (!data) return [];
+    const ns = new Set<string>();
+    for (const n of data.nodes) { if (n.namespace) ns.add(n.namespace); }
+    return Array.from(ns).sort();
+  }, [data]);
 
   if (loading) {
     return (
@@ -33,7 +42,11 @@ export default function ClusterMap() {
     );
   }
 
-  const filtered = data.nodes.filter(n => filter === 'all' || n.type === filter);
+  const filtered = data.nodes.filter(n => {
+    if (filter !== 'all' && n.type !== filter) return false;
+    if (selectedNs !== 'all' && n.namespace && n.namespace !== selectedNs) return false;
+    return true;
+  });
 
   const grouped: Record<string, TopologyNode[]> = {};
   for (const node of filtered) {
@@ -56,6 +69,10 @@ export default function ClusterMap() {
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div />
+        <LiveIndicator lastUpdated={lastUpdated} />
+      </div>
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
         <StatCard label="Nodes" value={data.stats.total_nodes} color="text-cyan-400" />
@@ -67,18 +84,33 @@ export default function ClusterMap() {
       </div>
 
       {/* Filter */}
-      <div className="flex gap-2">
-        {(['all', 'node', 'pod', 'namespace'] as const).map(f => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              filter === f ? 'bg-cyan-500/20 text-cyan-400' : 'bg-surface-800 text-gray-400 hover:text-white'
-            }`}
+      <div className="flex items-center gap-4 flex-wrap">
+        <div className="flex gap-2">
+          {(['all', 'node', 'pod', 'namespace'] as const).map(f => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                filter === f ? 'bg-cyan-500/20 text-cyan-400' : 'bg-surface-800 text-gray-400 hover:text-white'
+              }`}
+            >
+              {f.charAt(0).toUpperCase() + f.slice(1)}
+            </button>
+          ))}
+        </div>
+        <div className="flex items-center gap-2">
+          <Layers className="w-4 h-4 text-gray-500" />
+          <select
+            value={selectedNs}
+            onChange={e => setSelectedNs(e.target.value)}
+            className="bg-surface-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-gray-300 focus:outline-none focus:border-cyan-500 transition-colors"
           >
-            {f.charAt(0).toUpperCase() + f.slice(1)}
-          </button>
-        ))}
+            <option value="all">All Namespaces ({namespaces.length})</option>
+            {namespaces.map(ns => (
+              <option key={ns} value={ns}>{ns}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Topology Map */}

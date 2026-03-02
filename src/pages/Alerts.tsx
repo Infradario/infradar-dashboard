@@ -1,19 +1,20 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Bell, AlertTriangle, AlertCircle, Info, Lightbulb } from 'lucide-react';
 import { api } from '../lib/api';
 import type { AlertsResponse } from '../lib/api';
+import { usePolling } from '../hooks/usePolling';
+import { LiveIndicator } from '../components/LiveIndicator';
 
 export default function Alerts() {
   const { id } = useParams<{ id: string }>();
-  const [data, setData] = useState<AlertsResponse | null>(null);
-  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>('all');
 
-  useEffect(() => {
-    if (!id) return;
-    api.getAlerts(id).then(setData).catch(() => null).finally(() => setLoading(false));
-  }, [id]);
+  const { data, loading, lastUpdated } = usePolling<AlertsResponse | null>(
+    () => id ? api.getAlerts(id).catch(() => null) : Promise.resolve(null),
+    30000,
+    [id],
+  );
 
   if (loading) {
     return (
@@ -49,6 +50,10 @@ export default function Alerts() {
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div />
+        <LiveIndicator lastUpdated={lastUpdated} />
+      </div>
       {/* Summary */}
       <div className="grid grid-cols-3 gap-4">
         <div className="bg-surface-800 border border-white/5 rounded-xl p-5 text-center">

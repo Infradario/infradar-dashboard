@@ -1,19 +1,20 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Activity, Plus, Minus, RefreshCw, ArrowRightLeft } from 'lucide-react';
 import { api } from '../lib/api';
 import type { EventStream } from '../lib/api';
+import { usePolling } from '../hooks/usePolling';
+import { LiveIndicator } from '../components/LiveIndicator';
 
 export default function Events() {
   const { id } = useParams<{ id: string }>();
-  const [data, setData] = useState<EventStream | null>(null);
-  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>('all');
 
-  useEffect(() => {
-    if (!id) return;
-    api.getEvents(id).then(setData).catch(() => null).finally(() => setLoading(false));
-  }, [id]);
+  const { data, loading, lastUpdated } = usePolling<EventStream | null>(
+    () => id ? api.getEvents(id).catch(() => null) : Promise.resolve(null),
+    30000,
+    [id],
+  );
 
   if (loading) {
     return (
@@ -54,6 +55,10 @@ export default function Events() {
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div />
+        <LiveIndicator lastUpdated={lastUpdated} />
+      </div>
       {/* Summary */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <SummaryCard label="Total Events" value={data.summary.total_events} color="text-cyan-400" />

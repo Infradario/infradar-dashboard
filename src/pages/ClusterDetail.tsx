@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Server, Cpu, HardDrive, Activity,
@@ -12,21 +12,18 @@ import {
 import { api } from '../lib/api';
 import type { Snapshot } from '../lib/api';
 import { useCluster } from '../hooks/useCluster';
+import { usePolling } from '../hooks/usePolling';
+import { LiveIndicator } from '../components/LiveIndicator';
 
 export default function ClusterDetail() {
   const { selected } = useCluster();
-  const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
   const [tab, setTab] = useState<'overview' | 'nodes' | 'pods'>('overview');
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!selected) { setLoading(false); return; }
-    setLoading(true);
-    api.getLatestSnapshot(selected.id).catch(() => null).then((s) => {
-      setSnapshot(s);
-      setLoading(false);
-    });
-  }, [selected?.id]);
+  const { data: snapshot, loading, lastUpdated } = usePolling<Snapshot | null>(
+    () => selected ? api.getLatestSnapshot(selected.id).catch(() => null) : Promise.resolve(null),
+    30000,
+    [selected?.id],
+  );
 
   if (!selected) {
     return (
@@ -62,6 +59,7 @@ export default function ClusterDetail() {
           <div className="flex items-center gap-3 mt-1">
             <span className="text-sm text-gray-400">{selected.provider.toUpperCase()}</span>
             <StatusBadge status={selected.status} />
+            <LiveIndicator lastUpdated={lastUpdated} />
           </div>
         </div>
       </div>

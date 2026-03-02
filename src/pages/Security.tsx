@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Shield, AlertTriangle, CheckCircle, XCircle,
@@ -8,21 +8,18 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 
 import { api } from '../lib/api';
 import type { SecurityReport } from '../lib/api';
 import { useCluster } from '../hooks/useCluster';
+import { usePolling } from '../hooks/usePolling';
+import { LiveIndicator } from '../components/LiveIndicator';
 
 export default function Security() {
   const { selected } = useCluster();
-  const [security, setSecurity] = useState<SecurityReport | null>(null);
-  const [loading, setLoading] = useState(true);
   const [expandedRule, setExpandedRule] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!selected) { setLoading(false); return; }
-    setLoading(true);
-    api.getSecurityReport(selected.id).catch(() => null).then((sec) => {
-      setSecurity(sec);
-      setLoading(false);
-    });
-  }, [selected?.id]);
+  const { data: security, loading, lastUpdated } = usePolling<SecurityReport | null>(
+    () => selected ? api.getSecurityReport(selected.id).catch(() => null) : Promise.resolve(null),
+    60000,
+    [selected?.id],
+  );
 
   if (!selected) {
     return (
@@ -64,6 +61,7 @@ export default function Security() {
         <Shield className="w-6 h-6 text-cyan-400" />
         <h1 className="text-2xl font-bold">{selected.name} — Security</h1>
         <span className="text-sm text-gray-500">{selected.provider.toUpperCase()}</span>
+        <LiveIndicator lastUpdated={lastUpdated} />
       </div>
 
       {/* Security Tools */}

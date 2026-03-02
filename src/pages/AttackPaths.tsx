@@ -1,19 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Shield, AlertTriangle, ChevronDown, ChevronUp, Target, Zap, Wrench } from 'lucide-react';
 import { api } from '../lib/api';
 import type { AttackPathAnalysis, AttackPath } from '../lib/api';
+import { usePolling } from '../hooks/usePolling';
 
 export default function AttackPaths() {
   const { id } = useParams<{ id: string }>();
-  const [data, setData] = useState<AttackPathAnalysis | null>(null);
-  const [loading, setLoading] = useState(true);
   const [expandedPath, setExpandedPath] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!id) return;
-    api.getAttackPaths(id).then(setData).catch(() => null).finally(() => setLoading(false));
-  }, [id]);
+  const { data, loading } = usePolling<AttackPathAnalysis | null>(
+    () => id ? api.getAttackPaths(id).catch(() => null) : Promise.resolve(null),
+    60000,
+    [id],
+  );
 
   if (loading) {
     return (

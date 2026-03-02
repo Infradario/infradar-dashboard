@@ -3,6 +3,8 @@ import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Share2 } from 'lucide-react';
 import { api } from '../lib/api';
 import type { ServiceMeshResponse, ServiceMeshNode, ServiceMeshEdge } from '../lib/api';
+import { usePolling } from '../hooks/usePolling';
+import { LiveIndicator } from '../components/LiveIndicator';
 
 /* ── ArgoCD-style colours ── */
 const KIND_COLORS: Record<string, string> = {
@@ -240,11 +242,10 @@ function renderYamlValue(lines: string[], key: string, value: unknown, indent: n
 /* ── Main component ── */
 export default function AppMesh() {
   const { id } = useParams<{ id: string }>();
-  const [data, setData] = useState<ServiceMeshResponse | null>(null);
-  const [loading, setLoading] = useState(true);
   const [selectedNamespace, setSelectedNamespace] = useState('');
   const [selectedApp, setSelectedApp] = useState<ServiceMeshNode | null>(null);
   const [selectedNode, setSelectedNode] = useState<ServiceMeshNode | null>(null);
+  const initialNsSet = useRef(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [pan, setPan] = useState({ x: 40, y: 40 });
@@ -252,16 +253,22 @@ export default function AppMesh() {
   const isPanning = useRef(false);
   const lastMouse = useRef({ x: 0, y: 0 });
 
+  const { data, loading, lastUpdated } = usePolling<ServiceMeshResponse | null>(
+    () => id ? api.getServiceMesh(id).catch(() => null) : Promise.resolve(null),
+    60000,
+    [id],
+  );
+
   useEffect(() => {
-    if (!id) return;
-    api.getServiceMesh(id).then((d) => {
-      setData(d);
-      const allNs = new Set<string>();
-      for (const n of d.nodes) { if (n.namespace) allNs.add(n.namespace); }
-      const sorted = Array.from(allNs).sort();
-      if (sorted.length > 0) setSelectedNamespace(sorted[0]);
-    }).catch(() => null).finally(() => setLoading(false));
-  }, [id]);
+    if (!data || initialNsSet.current) return;
+    const allNs = new Set<string>();
+    for (const n of data.nodes) { if (n.namespace) allNs.add(n.namespace); }
+    const sorted = Array.from(allNs).sort();
+    if (sorted.length > 0) {
+      setSelectedNamespace(sorted[0]);
+      initialNsSet.current = true;
+    }
+  }, [data]);
 
   const namespaces = useMemo(() => {
     if (!data) return [];
@@ -352,7 +359,10 @@ export default function AppMesh() {
         </Link>
         <div className="flex-1">
           <h1 className="text-2xl font-bold">App Mesh</h1>
-          <p className="text-sm text-gray-400">{data.nodes.length} resources &middot; {data.edges.length} connections</p>
+          <div className="flex items-center gap-3">
+            <p className="text-sm text-gray-400">{data.nodes.length} resources &middot; {data.edges.length} connections</p>
+            <LiveIndicator lastUpdated={lastUpdated} />
+          </div>
         </div>
       </div>
 

@@ -4,6 +4,7 @@ import { GitCompare, Shield, AlertTriangle } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { api } from '../lib/api';
 import type { NSCompareResponse, NamespaceProfile } from '../lib/api';
+import { usePolling } from '../hooks/usePolling';
 
 export default function NSCompare() {
   const { id } = useParams<{ id: string }>();
@@ -11,20 +12,22 @@ export default function NSCompare() {
   const [ns1, setNs1] = useState('');
   const [ns2, setNs2] = useState('');
   const [data, setData] = useState<NSCompareResponse | null>(null);
-  const [loading, setLoading] = useState(true);
+
+  const { data: nsListResult, loading } = usePolling(
+    () => id ? api.getNSCompare(id).catch(() => null) : Promise.resolve(null),
+    60000,
+    [id],
+  );
 
   useEffect(() => {
-    if (!id) return;
-    api.getNSCompare(id).then((res) => {
-      if ('namespaces' in res) {
-        setNamespaces(res.namespaces as string[]);
-        if (res.namespaces.length >= 2) {
-          setNs1((res.namespaces as string[])[0]);
-          setNs2((res.namespaces as string[])[1]);
-        }
-      }
-    }).catch(() => null).finally(() => setLoading(false));
-  }, [id]);
+    if (!nsListResult || !('namespaces' in nsListResult)) return;
+    const nsList = nsListResult.namespaces as string[];
+    setNamespaces(nsList);
+    if (nsList.length >= 2 && !ns1 && !ns2) {
+      setNs1(nsList[0]);
+      setNs2(nsList[1]);
+    }
+  }, [nsListResult, ns1, ns2]);
 
   useEffect(() => {
     if (!id || !ns1 || !ns2) return;

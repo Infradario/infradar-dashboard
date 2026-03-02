@@ -1,25 +1,23 @@
-import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Server, Trash2 } from 'lucide-react';
 import { api } from '../lib/api';
 import type { Cluster } from '../lib/api';
+import { usePolling } from '../hooks/usePolling';
+import { LiveIndicator } from '../components/LiveIndicator';
 
 export default function Clusters() {
-  const [clusters, setClusters] = useState<Cluster[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: clusters, loading, lastUpdated, refresh } = usePolling<Cluster[]>(
+    () => api.getClusters(),
+    30000,
+  );
 
-  useEffect(() => {
-    api.getClusters()
-      .then(setClusters)
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
+  const clusterList = clusters || [];
 
   const handleDelete = async (id: string, name: string) => {
     if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
     try {
       await api.deleteCluster(id);
-      setClusters(prev => prev.filter(c => c.id !== id));
+      refresh();
     } catch {}
   };
 
@@ -36,7 +34,10 @@ export default function Clusters() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold">Clusters</h1>
-          <p className="text-gray-400 mt-1">Manage your Kubernetes clusters</p>
+          <div className="flex items-center gap-3 mt-1">
+            <p className="text-gray-400">Manage your Kubernetes clusters</p>
+            <LiveIndicator lastUpdated={lastUpdated} />
+          </div>
         </div>
         <Link
           to="/clusters/new"
@@ -47,7 +48,7 @@ export default function Clusters() {
         </Link>
       </div>
 
-      {clusters.length === 0 ? (
+      {clusterList.length === 0 ? (
         <div className="bg-surface-800 border border-white/5 rounded-xl p-12 text-center">
           <Server className="w-12 h-12 text-gray-600 mx-auto mb-4" />
           <h3 className="text-lg font-semibold mb-2">No clusters yet</h3>
@@ -74,7 +75,7 @@ export default function Clusters() {
               </tr>
             </thead>
             <tbody>
-              {clusters.map((cluster) => (
+              {clusterList.map((cluster) => (
                 <tr key={cluster.id} className="border-b border-white/5 last:border-0 hover:bg-white/[0.02]">
                   <td className="p-4">
                     <Link to={`/clusters/${cluster.id}`} className="font-medium hover:text-cyan-400 transition-colors">

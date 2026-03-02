@@ -1,18 +1,17 @@
-import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Flame, Server } from 'lucide-react';
 import { api } from '../lib/api';
 import type { HeatmapData } from '../lib/api';
+import { usePolling } from '../hooks/usePolling';
 
 export default function Heatmap() {
   const { id } = useParams<{ id: string }>();
-  const [data, setData] = useState<HeatmapData | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!id) return;
-    api.getHeatmap(id).then(setData).catch(() => null).finally(() => setLoading(false));
-  }, [id]);
+  const { data, loading } = usePolling<HeatmapData | null>(
+    () => id ? api.getHeatmap(id).catch(() => null) : Promise.resolve(null),
+    60000,
+    [id],
+  );
 
   if (loading) {
     return (

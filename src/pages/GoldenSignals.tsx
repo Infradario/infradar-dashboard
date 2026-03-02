@@ -1,18 +1,17 @@
-import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Gauge, AlertCircle, Radio, Zap, CheckCircle, AlertTriangle, XCircle } from 'lucide-react';
 import { api } from '../lib/api';
 import type { GoldenSignals as GoldenSignalsType } from '../lib/api';
+import { usePolling } from '../hooks/usePolling';
 
 export default function GoldenSignals() {
   const { id } = useParams<{ id: string }>();
-  const [data, setData] = useState<GoldenSignalsType | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!id) return;
-    api.getGoldenSignals(id).then(setData).catch(() => null).finally(() => setLoading(false));
-  }, [id]);
+  const { data, loading } = usePolling<GoldenSignalsType | null>(
+    () => id ? api.getGoldenSignals(id).catch(() => null) : Promise.resolve(null),
+    60000,
+    [id],
+  );
 
   if (loading) {
     return (

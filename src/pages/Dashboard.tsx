@@ -1,22 +1,19 @@
-import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Server, Shield, Activity, AlertTriangle, Plus } from 'lucide-react';
 import { api } from '../lib/api';
 import type { Cluster } from '../lib/api';
+import { usePolling } from '../hooks/usePolling';
+import { LiveIndicator } from '../components/LiveIndicator';
 
 export default function Dashboard() {
-  const [clusters, setClusters] = useState<Cluster[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: clusters, loading, lastUpdated } = usePolling<Cluster[]>(
+    () => api.getClusters(),
+    30000,
+  );
 
-  useEffect(() => {
-    api.getClusters()
-      .then(setClusters)
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
-
-  const activeClusters = clusters.filter(c => c.status === 'connected');
-  const pendingClusters = clusters.filter(c => c.status === 'pending');
+  const clusterList = clusters || [];
+  const activeClusters = clusterList.filter(c => c.status === 'connected');
+  const pendingClusters = clusterList.filter(c => c.status === 'pending');
 
   if (loading) {
     return (
@@ -31,7 +28,10 @@ export default function Dashboard() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold">Dashboard</h1>
-          <p className="text-gray-400 mt-1">Overview of your Kubernetes infrastructure</p>
+          <div className="flex items-center gap-3 mt-1">
+            <p className="text-gray-400">Overview of your Kubernetes infrastructure</p>
+            <LiveIndicator lastUpdated={lastUpdated} />
+          </div>
         </div>
         <Link
           to="/clusters/new"
@@ -47,7 +47,7 @@ export default function Dashboard() {
         <StatCard
           icon={<Server className="w-5 h-5 text-cyan-400" />}
           label="Total Clusters"
-          value={clusters.length}
+          value={clusterList.length}
         />
         <StatCard
           icon={<Activity className="w-5 h-5 text-emerald-400" />}
@@ -67,7 +67,7 @@ export default function Dashboard() {
       </div>
 
       {/* Clusters */}
-      {clusters.length === 0 ? (
+      {clusterList.length === 0 ? (
         <div className="bg-surface-800 border border-white/5 rounded-xl p-12 text-center">
           <Server className="w-12 h-12 text-gray-600 mx-auto mb-4" />
           <h3 className="text-lg font-semibold mb-2">No clusters yet</h3>
@@ -82,7 +82,7 @@ export default function Dashboard() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {clusters.map((cluster) => (
+          {clusterList.map((cluster) => (
             <ClusterCard key={cluster.id} cluster={cluster} />
           ))}
         </div>
