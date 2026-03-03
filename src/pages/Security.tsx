@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Shield, AlertTriangle, CheckCircle, XCircle,
-  ChevronDown, ChevronUp, Target, Crosshair, GitCompare, Server,
+  ChevronDown, ChevronUp, Target, Crosshair, GitCompare, Server, ArrowUpDown,
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { api } from '../lib/api';
@@ -14,6 +14,10 @@ import { LiveIndicator } from '../components/LiveIndicator';
 export default function Security() {
   const { selected } = useCluster();
   const [expandedRule, setExpandedRule] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<string>('severity-desc');
+  const [filterSeverity, setFilterSeverity] = useState<string>('all');
+  const [filterCategory, setFilterCategory] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const { data: security, loading, lastUpdated } = usePolling<SecurityReport | null>(
     () => selected ? api.getSecurityReport(selected.id).catch(() => null) : Promise.resolve(null),
@@ -136,47 +140,185 @@ export default function Security() {
           </div>
 
           {/* Findings list */}
-          <div className="bg-surface-800 border border-white/5 rounded-xl">
-            <div className="p-5 border-b border-white/5">
-              <h3 className="font-semibold">Findings ({security.report.findings?.length || 0})</h3>
-            </div>
-            <div className="divide-y divide-white/5">
-              {(security.report.findings || []).map((f, i) => {
-                const key = `${f.rule_id}-${i}`;
-                const expanded = expandedRule === key;
-                return (
-                  <div key={key}>
-                    <button
-                      onClick={() => setExpandedRule(expanded ? null : key)}
-                      className="w-full flex items-center gap-4 p-4 hover:bg-white/[0.02] transition-colors text-left"
-                    >
-                      <span className={`text-xs font-medium px-2.5 py-1 rounded-full whitespace-nowrap ${severityBadge[f.severity] || ''}`}>
-                        {f.severity}
-                      </span>
-                      <span className="text-xs text-gray-500 font-mono whitespace-nowrap">{f.rule_id}</span>
-                      <span className="text-sm flex-1 truncate">{f.rule_name}</span>
-                      <span className="text-xs text-gray-500 font-mono">{f.namespace}/{f.resource}</span>
-                      {expanded ? <ChevronUp className="w-4 h-4 text-gray-500" /> : <ChevronDown className="w-4 h-4 text-gray-500" />}
-                    </button>
-                    {expanded && (
-                      <div className="px-4 pb-4 space-y-3 ml-4 border-l-2 border-white/5">
-                        <div>
-                          <div className="text-xs text-gray-500 mb-1">Message</div>
-                          <div className="text-sm text-gray-300">{f.message}</div>
-                        </div>
-                        <div>
-                          <div className="text-xs text-gray-500 mb-1">Remediation</div>
-                          <div className="text-sm text-emerald-400">{f.remediation}</div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          <FindingsList
+            findings={security.report.findings || []}
+            sortBy={sortBy}
+            setSortBy={setSortBy}
+            filterSeverity={filterSeverity}
+            setFilterSeverity={setFilterSeverity}
+            filterCategory={filterCategory}
+            setFilterCategory={setFilterCategory}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            expandedRule={expandedRule}
+            setExpandedRule={setExpandedRule}
+            severityBadge={severityBadge}
+          />
         </div>
       )}
+    </div>
+  );
+}
+
+const severityOrder: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 };
+
+interface FindingsListProps {
+  findings: SecurityReport['report']['findings'];
+  sortBy: string;
+  setSortBy: (v: string) => void;
+  filterSeverity: string;
+  setFilterSeverity: (v: string) => void;
+  filterCategory: string;
+  setFilterCategory: (v: string) => void;
+  searchQuery: string;
+  setSearchQuery: (v: string) => void;
+  expandedRule: string | null;
+  setExpandedRule: (v: string | null) => void;
+  severityBadge: Record<string, string>;
+}
+
+function FindingsList({
+  findings, sortBy, setSortBy, filterSeverity, setFilterSeverity,
+  filterCategory, setFilterCategory, searchQuery, setSearchQuery,
+  expandedRule, setExpandedRule, severityBadge,
+}: FindingsListProps) {
+  const categories = useMemo(() => {
+    const set = new Set<string>();
+    findings.forEach(f => f.category && set.add(f.category));
+    return [...set].sort();
+  }, [findings]);
+
+  const processed = useMemo(() => {
+    let result = [...findings];
+
+    // Filter
+    if (filterSeverity !== 'all') {
+      result = result.filter(f => f.severity === filterSeverity);
+    }
+    if (filterCategory !== 'all') {
+      result = result.filter(f => f.category === filterCategory);
+    }
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(f =>
+        f.rule_name.toLowerCase().includes(q) ||
+        f.rule_id.toLowerCase().includes(q) ||
+        f.resource?.toLowerCase().includes(q) ||
+        f.namespace?.toLowerCase().includes(q) ||
+        f.detail?.toLowerCase().includes(q)
+      );
+    }
+
+    // Sort
+    result.sort((a, b) => {
+      switch (sortBy) {
+        case 'severity-desc':
+          return (severityOrder[a.severity] ?? 9) - (severityOrder[b.severity] ?? 9);
+        case 'severity-asc':
+          return (severityOrder[b.severity] ?? 9) - (severityOrder[a.severity] ?? 9);
+        case 'rule-id':
+          return a.rule_id.localeCompare(b.rule_id);
+        case 'category':
+          return (a.category || '').localeCompare(b.category || '');
+        case 'namespace':
+          return (a.namespace || '').localeCompare(b.namespace || '');
+        case 'resource':
+          return (a.resource || '').localeCompare(b.resource || '');
+        default:
+          return 0;
+      }
+    });
+
+    return result;
+  }, [findings, sortBy, filterSeverity, filterCategory, searchQuery]);
+
+  const selectClass = "bg-surface-700 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-gray-300 focus:outline-none focus:border-cyan-500/50";
+
+  return (
+    <div className="bg-surface-800 border border-white/5 rounded-xl">
+      <div className="p-5 border-b border-white/5 space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold">Findings ({processed.length}{processed.length !== findings.length ? ` / ${findings.length}` : ''})</h3>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-1.5">
+            <ArrowUpDown className="w-3.5 h-3.5 text-gray-500" />
+            <select value={sortBy} onChange={e => setSortBy(e.target.value)} className={selectClass}>
+              <option value="severity-desc">Severity (High → Low)</option>
+              <option value="severity-asc">Severity (Low → High)</option>
+              <option value="rule-id">Rule ID</option>
+              <option value="category">Category</option>
+              <option value="namespace">Namespace</option>
+              <option value="resource">Resource</option>
+            </select>
+          </div>
+          <select value={filterSeverity} onChange={e => setFilterSeverity(e.target.value)} className={selectClass}>
+            <option value="all">All Severities</option>
+            <option value="critical">Critical</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
+          <select value={filterCategory} onChange={e => setFilterCategory(e.target.value)} className={selectClass}>
+            <option value="all">All Categories</option>
+            {categories.map(c => (
+              <option key={c} value={c}>{c.replace(/_/g, ' ')}</option>
+            ))}
+          </select>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Search findings..."
+            className="bg-surface-700 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-gray-300 placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 w-48"
+          />
+        </div>
+      </div>
+      <div className="divide-y divide-white/5">
+        {processed.map((f, i) => {
+          const key = `${f.rule_id}-${i}`;
+          const expanded = expandedRule === key;
+          return (
+            <div key={key}>
+              <button
+                onClick={() => setExpandedRule(expanded ? null : key)}
+                className="w-full flex items-center gap-4 p-4 hover:bg-white/[0.02] transition-colors text-left"
+              >
+                <span className={`text-xs font-medium px-2.5 py-1 rounded-full whitespace-nowrap ${severityBadge[f.severity] || ''}`}>
+                  {f.severity}
+                </span>
+                <span className="text-xs text-gray-500 font-mono whitespace-nowrap">{f.rule_id}</span>
+                <span className="text-sm flex-1 truncate">{f.rule_name}</span>
+                <span className="text-xs text-gray-500 font-mono">{f.namespace}/{f.resource}</span>
+                {expanded ? <ChevronUp className="w-4 h-4 text-gray-500" /> : <ChevronDown className="w-4 h-4 text-gray-500" />}
+              </button>
+              {expanded && (
+                <div className="px-4 pb-4 space-y-3 ml-4 border-l-2 border-white/5">
+                  <div>
+                    <div className="text-xs text-gray-500 mb-1">Description</div>
+                    <div className="text-sm text-gray-300">{f.description}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-500 mb-1">Detail</div>
+                    <div className="text-sm text-gray-300">{f.detail}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-500 mb-1">Remediation</div>
+                    <div className="text-sm text-emerald-400">{f.remediation}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-500 mb-1">Benchmark</div>
+                    <div className="text-sm text-cyan-400">{f.benchmark}</div>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+        {processed.length === 0 && (
+          <div className="p-8 text-center text-gray-500 text-sm">No findings match your filters</div>
+        )}
+      </div>
     </div>
   );
 }

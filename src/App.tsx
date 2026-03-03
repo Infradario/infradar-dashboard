@@ -21,6 +21,7 @@ import Alerts from './pages/Alerts';
 import NSCompare from './pages/NSCompare';
 import GoldenSignals from './pages/GoldenSignals';
 import AppMesh from './pages/AppMesh';
+import FalcoAlerts from './pages/FalcoAlerts';
 
 export default function App() {
   return (
@@ -50,6 +51,7 @@ export default function App() {
             <Route path="/security/:id/attack-paths" element={<AttackPaths />} />
             <Route path="/security/:id/blast-radius" element={<BlastRadius />} />
             <Route path="/security/:id/ns-compare" element={<NSCompare />} />
+            <Route path="/security/falco" element={<FalcoAlerts />} />
           </Route>
         </Routes>
       </AuthProvider>

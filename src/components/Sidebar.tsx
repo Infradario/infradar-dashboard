@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Server, Shield, LogOut, Radar, Sun, Moon, Monitor, Plus, ChevronDown } from 'lucide-react';
+import { LayoutDashboard, Server, Shield, ShieldAlert, LogOut, Radar, Sun, Moon, Monitor, Plus, ChevronDown } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../hooks/useTheme';
 import { useCluster } from '../hooks/useCluster';
@@ -13,6 +13,7 @@ export default function Sidebar() {
     { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
     { to: '/details', icon: Server, label: 'Details' },
     { to: '/security', icon: Shield, label: 'Security' },
+    { to: '/security/falco', icon: ShieldAlert, label: 'Runtime Alerts' },
   ];
 
   const themes = [

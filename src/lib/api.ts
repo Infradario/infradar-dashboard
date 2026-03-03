@@ -113,6 +113,16 @@ export const api = {
 
   getServiceMesh: (clusterId: string) =>
     request<ServiceMeshResponse>(`/api/v1/clusters/${clusterId}/service-mesh`),
+
+  // Falco runtime alerts
+  getFalcoAlerts: (clusterId: string, limit = 100, priority?: string) => {
+    const params = new URLSearchParams({ limit: String(limit) });
+    if (priority) params.set('priority', priority);
+    return request<FalcoStoredAlert[]>(`/api/v1/clusters/${clusterId}/falco/alerts?${params}`);
+  },
+
+  getFalcoSummary: (clusterId: string) =>
+    request<FalcoSummary>(`/api/v1/clusters/${clusterId}/falco/summary`),
 };
 
 // Types
@@ -210,10 +220,12 @@ export interface SecurityFinding {
   rule_name: string;
   severity: string;
   category: string;
+  benchmark: string;
+  description: string;
+  remediation: string;
   resource: string;
   namespace: string;
-  message: string;
-  remediation: string;
+  detail: string;
 }
 
 export interface SecurityRule {
@@ -585,4 +597,31 @@ export interface ServiceMeshEdge {
 export interface ServiceMeshResponse {
   nodes: ServiceMeshNode[];
   edges: ServiceMeshEdge[];
+}
+
+// Falco runtime alert types
+export interface FalcoAlert {
+  uuid: string;
+  output: string;
+  priority: string;
+  rule: string;
+  time: string;
+  source: string;
+  hostname: string;
+  tags: string[];
+  output_fields: Record<string, unknown>;
+}
+
+export interface FalcoStoredAlert {
+  id: string;
+  cluster_id: string;
+  alert: FalcoAlert;
+  created_at: string;
+}
+
+export interface FalcoSummary {
+  total: number;
+  by_priority: Record<string, number>;
+  by_rule: Record<string, number>;
+  alerts: FalcoStoredAlert[];
 }
